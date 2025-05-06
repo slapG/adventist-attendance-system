@@ -29,24 +29,15 @@ $cakeDescription = 'Adventist Attendance Management System';
     <?= $this->Html->meta('csrfToken', $this->request->getAttribute('csrfToken'))?>
 
     <?= $this->Html->css([
-        'https://fonts.gstatic.com',
-        'https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap',
+        'nunito.css',
         '/assets/css/bootstrap.css',
         '/assets/vendors/iconly/bold.css',
         '/assets/vendors/perfect-scrollbar/perfect-scrollbar.css',
         '/assets/vendors/bootstrap-icons/bootstrap-icons.css',
         '/assets/css/app.css',
+        'custom.css',
     ]) ?>
-
-    <?= $this->Html->script([
-        '/datatable/jquery-3.6.0.min.js',
-        '/datatable/jquery.dataTables.min.js',
-        '/swal/sweetalert2@11.js'
-    ])?>
-    <?= $this->Html->css([
-        '/datatable/jquery.dataTables.min.css',
-    ])?>
-    
+       
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
     <?= $this->fetch('script') ?>
@@ -61,10 +52,8 @@ $cakeDescription = 'Adventist Attendance Management System';
     <?= $this->Html->script([
         '/assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js',
         '/assets/js/bootstrap.bundle.min.js',
-        '/assets/js/pages/dashboard.js',
-        '/assets/vendors/apexcharts/apexcharts.js',
+        '/swal/sweetalert2@11.js',
         '/assets/js/main.js',
-        
         ])?>
     </div>
 </div>

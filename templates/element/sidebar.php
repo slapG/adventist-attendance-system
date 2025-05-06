@@ -21,22 +21,22 @@
                     </a>
                 </li>
 
-                <li class="sidebar-item">
-                    <a href="#" class='sidebar-link'>
+                <li class="sidebar-item <?= $this->request->getParam('controller') === 'Attendances' ? 'active' : '' ?>" >
+                    <a href="<?= $this->Url->build(['controller' => 'attendances', 'action' => 'index'])?>" class='sidebar-link'>
                         <i class="bi bi-person-bounding-box"></i>
                         <span>Attendance</span>
                     </a>
                 </li>
 
-                <li class="sidebar-item">
+                <li class="sidebar-item <?= $this->request->getParam('controller') === 'Employees' ? 'active' : '' ?>">
                     <a href="<?= $this->Url->build(['controller' => 'employees', 'action' => 'index']) ?>" class='sidebar-link'>
                         <i class="bi bi-people-fill"></i>
                         <span>Employees</span>
                     </a>
                 </li>
 
-                <li class="sidebar-item">
-                    <a href="#" class='sidebar-link'>
+                <li class="sidebar-item <?= $this->request->getParam('controller') === 'Departments' ? 'active' : '' ?>">
+                    <a href="<?= $this->Url->build(['controller' => 'departments', 'action' => 'index'])?>" class='sidebar-link'>
                         <i class="bi bi-building"></i>
                         <span>Departments</span>
                     </a>

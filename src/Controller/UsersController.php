@@ -126,7 +126,6 @@ class UsersController extends AppController
                 $this->response = $this->response->withtype('json')
                     ->withStringBody(json_encode(['status' => 'error', 'redirect' => false]));
             }
-
             return $this->response;
         }
     }

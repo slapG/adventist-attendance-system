@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\I18n\FrozenTime;
-
+use Cake\I18n\FrozenDate;
 /**
  * Attendances Controller
  *
@@ -25,11 +25,10 @@ class AttendancesController extends AppController
      */
     public function index()
     {
-        $this->paginate = [
-            'contain' => ['Employees'],
-        ];
-        $attendances = $this->paginate($this->Attendances);
-
+        
+        $attendances = $this->Attendances->find('all', [
+            'contain' => ['Employees', 'Employees.Departments'],
+        ]);
         $this->set(compact('attendances'));
     }
 
@@ -62,7 +61,7 @@ class AttendancesController extends AppController
             if ($this->Attendances->save($attendance)) {
                 $this->Flash->success(__('The attendance has been saved.'));
 
-                return $this->redirect(['action' => 'index']);
+                return $this->redirect(['action' => 'add']);
             }
             $this->Flash->error(__('The attendance could not be saved. Please, try again.'));
         }
@@ -114,9 +113,6 @@ class AttendancesController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
-    public function scan(){
-        
-    }
 
     public function addAttendance()
     {
@@ -124,7 +120,6 @@ class AttendancesController extends AppController
         $this->autoRender = false;
 
         $data = $this->request->input('json_decode');
-
         $employeeId = $data->employee_id ?? null;
 
         if (!$employeeId) {
@@ -132,26 +127,58 @@ class AttendancesController extends AppController
                 ->withStringBody(json_encode(['status' => 'error', 'message' => 'Invalid QR Code']));
         }
 
-        // Check if employee exists
         $employee = $this->Attendances->Employees->find()->where(['id' => $employeeId])->first();
-
         if (!$employee) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode(['status' => 'error', 'message' => 'Employee not found']));
         }
 
-        // Add attendance
+        $now = FrozenTime::now();
+        $startOfDay = $now->startOfDay();
+        $endOfDay = $now->endOfDay();
+
+        $sixAM = $now->setTime(9, 59, 0);
+        $eightAM = $now->setTime(22, 0, 0);
+
+        if ($now < $sixAM || $now > $eightAM) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode(['status' => 'error', 'message' => 'Attendance can only be recorded between 6 AM and 8 AM']));
+        }
+
+        $existingAttendance = $this->Attendances->find()
+            ->where([
+                'employee_id' => $employeeId,
+                'check_in >=' => $startOfDay,
+                'check_in <=' => $endOfDay
+            ])
+            ->first();
+
+        if ($existingAttendance) {
+            if ($existingAttendance->check_out === null){
+                $existingAttendance->check_out = $now;
+                if ($this->Attendances->save($existingAttendance)) {
+                    return $this->response->withType('application/json')
+                        ->withStringBody(json_encode(['status' => 'success', 'message' => 'Time out successfully']));
+                } else {
+                    return $this->response->withType('application/json')
+                        ->withStringBody(json_encode(['status' => 'error', 'message' => 'Failed to save check-out']));
+                }
+            } else {
+                return $this->response->withType('application/json')
+                    ->withStringBody(json_encode(['status' => 'error', 'message' => 'Already Taken Time out']));
+            }
+        }
+
         $attendance = $this->Attendances->newEmptyEntity();
         $attendance->employee_id = $employeeId;
-        $attendance->check_in = FrozenTime::now();
+        $attendance->check_in = $now;
 
         if ($this->Attendances->save($attendance)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['status' => 'success', 'message' => 'Attendance recorded']));
+                ->withStringBody(json_encode(['status' => 'success', 'message' => 'Time in successfully']));
         }
 
         return $this->response->withType('application/json')
-            ->withStringBody(json_encode(['status' => 'error', 'message' => 'Failed to save attendance']));
-    }
-
+            ->withStringBody(json_encode(['status' => 'error', 'message' => 'Failed to save check-in']));
+    } 
 }

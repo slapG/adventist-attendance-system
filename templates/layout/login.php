@@ -28,8 +28,7 @@ $cakeDescription = 'Adventist Attendance Management System';
     <?= $this->Html->meta('icon') ?>
 
     <?= $this->Html->css([
-        'https://fonts.gstatic.com',
-        'https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap',
+        'nunito.css', 
         '/assets/css/bootstrap.css',
         '/assets/vendors/iconly/bold.css',
         '/assets/css/app.css',

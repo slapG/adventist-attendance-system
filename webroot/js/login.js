@@ -16,9 +16,10 @@ $(document).ready(function() {
                         icon: "success",
                         title: "Login Success",
                         showConfirmButton: false,
-                        timer: 5000
+                        timer: 500
+                    }).then(()=>{
+                        window.location.href = '/adventist-attendance-system/employees'; 
                     });
-                    window.location.href = '/adventist-attendance-system/'; 
                 } else if (response.status === 'error') {
                     Swal.fire({
                         position: "center",

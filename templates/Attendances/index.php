@@ -5,89 +5,93 @@
  */
 ?>
 
-<!-- templates/Attendances/scan.php -->
-<?= $this->Html->css('https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.css') ?>
-<?= $this->Html->script('https://unpkg.com/html5-qrcode') ?>
-
-<div id="reader" style="width:500px;"></div>
-<div id="scan-result"></div>
-
+<section class="section">
+    <div class="section col-md-12">
+    <div class="row g-3">
+    <div class="col-md-4">
+        <?= $this->Html->script('html5-qrcode.min.js') ?>
+    <div id="reader" style="width:380px; height: 400px;"></div>
+    <div id="scan-result"></div>
 <script>
-function onScanSuccess(decodedText, decodedResult) {
-    // Display result
-    document.getElementById('scan-result').innerText = "Scanned ID: " + decodedText;
+    function onScanSuccess(decodedText, decodedResult) {
+        document.getElementById('scan-result').innerText = "Scanned ID: " + decodedText;
 
-    // Send to CakePHP controller via AJAX
-    fetch("<?= $this->Url->build(['controller' => 'Attendances', 'action' => 'addAttendance']) ?>", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': <?= json_encode($this->request->getAttribute('csrfToken')) ?>
-        },
-        body: JSON.stringify({ employee_id: decodedText })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-    })
-    .catch(err => {
-        alert('Failed to record attendance.');
-        console.error(err);
-    });
+        fetch("<?= $this->Url->build(['controller' => 'Attendances', 'action' => 'addAttendance']) ?>", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': <?= json_encode($this->request->getAttribute('csrfToken')) ?>
+            },
+            body: JSON.stringify({ employee_id: decodedText })
+        })
+        .then(res => res.json())
+        .then(data => {
+            Swal.fire({
+            position: "center",
+            icon: "success",
+            title: data.message,
+            showConfirmButton: false,
+            timer: 5000
+            });
+            window.location.reload();
+        })
+        .catch(err => {
+            alert('Failed to record attendance.');
+            console.error(err);
+        });
 
-    // Stop scanner after success
-    html5QrcodeScanner.clear();
-}
+        html5QrcodeScanner.clear();
+    }
 
-let html5QrcodeScanner = new Html5QrcodeScanner(
-    "reader", { fps: 10, qrbox: 250 }
-);
-html5QrcodeScanner.render(onScanSuccess);
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 30, qrbox: 300 }
+    );
+    html5QrcodeScanner.render(onScanSuccess);
 </script>
-
-<div class="attendances index content">
-    <?= $this->Html->link(__('New Attendance'), ['action' => 'add'], ['class' => 'button float-right']) ?>
-    <h3><?= __('Attendances') ?></h3>
-    <div class="table-responsive">
-        <table>
+<div class="card" style="width: 380px; margin-top: 10px; height: 200px;">
+    <div class="card-header">
+        <h4>Todays Attendance Count</h4>
+    </div>
+    <div class="card-body">
+        <div id="attendanceCount" class="text-center" style="font-size: 30px; font-weight: bold;">
+        </div>
+    </div>
+</div>
+</div>
+<div class="col-md-8">
+    <div class="card 3"> 
+    <div class="card-header">
+        <span classs="float-left">List of all Employees</span>
+        <select id="departmentFilter" class="form-select form-select-sm float-end" style="width: 200px; margin-left: 5px;">
+            <option value="">All Departments</option>
+        </select>
+        <input type="date" class="form-control form-control-sm float-end" id="dateFilter" style="width: 200px; margin-left: 5px;">
+        <button class="btn btn-danger btn-sm float-end" id="pfdBtn" style="margin-left: 5px;">PDF</button>
+        <button class="btn btn-success btn-sm float-end" id="exelBtn" style="">EXEL</button>
+    </div>
+    <div class="card-body" style="height: 531px;">
+    <div class="table-responsive" id="tableContainer" style="max-height: 508px; overflow-y: auto; position: relative;">
+        <table class="table table-bordered table-hover nowrap" id="attendancesTable" style="width:100%; white-space: nowrap;">
             <thead>
-                <tr>
-                    <th><?= $this->Paginator->sort('id') ?></th>
-                    <th><?= $this->Paginator->sort('employee_id') ?></th>
-                    <th><?= $this->Paginator->sort('check_in') ?></th>
-                    <th><?= $this->Paginator->sort('check_out') ?></th>
-                    <th><?= $this->Paginator->sort('created') ?></th>
-                    <th><?= $this->Paginator->sort('modified') ?></th>
-                    <th class="actions"><?= __('Actions') ?></th>
+                <tr style="color: rgb(77, 148, 255);">
+                    <th>Id</th>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Time in</th>
+                    <th>Time out</th>    
+                    <th>Attendance Date</th>                            
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($attendances as $attendance): ?>
-                <tr>
-                    <td><?= $this->Number->format($attendance->id) ?></td>
-                    <td><?= $attendance->has('employee') ? $this->Html->link($attendance->employee->first_name, ['controller' => 'Employees', 'action' => 'view', $attendance->employee->id]) : '' ?></td>
-                    <td><?= h($attendance->check_in) ?></td>
-                    <td><?= h($attendance->check_out) ?></td>
-                    <td><?= h($attendance->created) ?></td>
-                    <td><?= h($attendance->modified) ?></td>
-                    <td class="actions">
-                        <?= $this->Html->link(__('View'), ['action' => 'view', $attendance->id]) ?>
-                        <?= $this->Html->link(__('Edit'), ['action' => 'edit', $attendance->id]) ?>
-                        <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $attendance->id], ['confirm' => __('Are you sure you want to delete # {0}?', $attendance->id)]) ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
             </tbody>
-        </table>
-    </div>
-    <div class="paginator">
-        <ul class="pagination">
-            <?= $this->Paginator->first('<< ' . __('first')) ?>
-            <?= $this->Paginator->prev('< ' . __('previous')) ?>
-            <?= $this->Paginator->numbers() ?>
-            <?= $this->Paginator->next(__('next') . ' >') ?>
-            <?= $this->Paginator->last(__('last') . ' >>') ?>
-        </ul>
-        <p><?= $this->Paginator->counter(__('Page {{page}} of {{pages}}, showing {{current}} record(s) out of {{count}} total')) ?></p>
+        </table>        
     </div>
 </div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script>
+    var attendances = <?= json_encode($attendances)?>
+</script>
+<?= $this->Html->script('attendance.js')?>

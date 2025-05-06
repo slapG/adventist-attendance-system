@@ -1,40 +1,95 @@
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('Loaded');
-    var table = $('#employeesTable').DataTable({
-        scrollX: true,
-        pageLength: 50,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        paging: true,
-        searching: true,
-        ordering: true,
-        autoWidth: false,
-    });
-    table.clear();
 
-    employees.forEach(function (employee, index) {
-        table.row.add([
-            index + 1,
-            `<div style="display: flex; justify-content: center; margin-top: 10px;">
-                <input type="checkbox" class="department-checkbox" value="${employee.id}">
-            </div>`,
-            employee.first_name || 'N/A',
-            employee.middle_name || 'N/A',
-            employee.last_name || 'N/A',
-            (employee.department && employee.department.department) || 'N/A',
-            employee.date_of_birth || 'N/A',
-            (employee.status === 'Singel' ? 'Single' : employee.status) || 'N/A',
-            employee.place_of_birth || 'N/A',
-            employee.qr_code || 'N/A',
-            new Date(employee.created).toLocaleString('en-US'),
-            new Date(employee.modified).toLocaleString('en-US'),
-            `<div class="btn-group" role="group" aria-label="Basic mixed styles example">
-                <a href="/adventist-attendance-system/employees/view/${employee.id}" class="btn btn-primary btn-sm me-1">View</a>
-                <a href="/adventist-attendance-system/employees/edit/${employee.id}" class="btn btn-success btn-sm me-1">Edit</a>
-                <a href="#" onclick="confirmDelete(${employee.id})" class="btn btn-danger btn-sm me-1">Delete</a>
-            </div>`
-        ]).draw(false);
+    var employeesTable = document.getElementById('employeesTable').getElementsByTagName('tbody')[0];
+    var searchInput = document.getElementById('searchBar'); 
+
+    function generateTable(employees) {
+
+        employeesTable.innerHTML = ''; 
+        employees.forEach(function (employee, index) {
+            var row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${employee.first_name || 'N/A'}</td>
+                <td>${employee.middle_name || 'N/A'}</td>
+                <td>${employee.last_name || 'N/A'}</td>
+                <td>${(employee.department && employee.department.department) || 'N/A'}</td>
+                <td>${employee.date_of_birth || 'N/A'}</td>
+                <td>${employee.status || 'N/A'}</td>
+                <td>${employee.place_of_birth || 'N/A'}</td>
+                <td>${new Date(employee.created).toLocaleString('en-US')}</td>
+                <td>${new Date(employee.modified).toLocaleString('en-US')}</td>
+                <td>
+                    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                        <a href="/adventist-attendance-system/employees/view/${employee.id}" class="btn btn-primary btn-sm">View</a>
+                        <a href="/adventist-attendance-system/employees/edit/${employee.id}" class="btn btn-success btn-sm ">Edit</a>
+                        <a href="#" onclick="confirmDelete(${employee.id})" class="btn btn-danger btn-sm ">Delete</a>
+                    </div> 
+                </td>
+            `;
+            employeesTable.appendChild(row);
+        });
+    }
+
+    var departmentFilter = document.getElementById('departmentFilter');
+    var departments = [...new Set(employees.map(emp => emp.department?.department || 'N/A'))];
+
+    departments.forEach(function (department) {
+        var option = document.createElement('option');
+        option.value = department;
+        option.textContent = department;
+        departmentFilter.appendChild(option);
     });
+
+    departmentFilter.addEventListener('change', function () {
+        var selectedDepartment = this.value;
+        var filteredEmployees = employees.filter(function (employee) {
+            return selectedDepartment === '' || (employee.department?.department === selectedDepartment);
+        });
+        generateTable(filteredEmployees);
+    });
+
+    var statusFilter = document.getElementById('statusFilter');
+    statusFilter.addEventListener('change', function () {
+        var selectedStatus = this.value.toLowerCase();
+        var filteredEmployees = employees.filter(function (employee) {
+            return selectedStatus === '' || employee.status.toLowerCase() === selectedStatus;
+        });
+        generateTable(filteredEmployees);
+    });
+
+    searchInput.addEventListener('input', function () {
+        var searchTerm = this.value.toLowerCase(); 
+        var filteredEmployees = employees.filter(function (employee) {
+            return (
+                employee.first_name.toLowerCase().includes(searchTerm) ||
+                employee.middle_name.toLowerCase().includes(searchTerm) ||
+                employee.last_name.toLowerCase().includes(searchTerm) ||
+                (employee.department && employee.department.department.toLowerCase().includes(searchTerm)) ||
+                employee.status.toLowerCase().includes(searchTerm) ||
+                employee.place_of_birth.toLowerCase().includes(searchTerm) ||
+                employee.qr_code.toLowerCase().includes(searchTerm)
+            );
+        });
+        generateTable(filteredEmployees);
+    });
+
+    var tableContainer = document.getElementById('tableContainer');
+    if (tableContainer) {
+        const ps = new PerfectScrollbar(tableContainer, {
+            wheelSpeed: 1, 
+            wheelPropagation: true, 
+            minScrollbarLength: 20, 
+            maxScrollbarLength: 30
+        });
+
+        console.log('Perfect Scrollbar initialized for #tableContainer');
+    }
+    generateTable(employees);
 });
+
 
 function confirmDelete(id) {
     Swal.fire({
@@ -49,7 +104,7 @@ function confirmDelete(id) {
         if (result.isConfirmed) {
             $.ajax({
                 url: `/adventist-attendance-system/employees/delete/${id}`,
-                type: 'POST', 
+                type: 'POST',
                 headers: {
                     'X-CSRF-Token': $('meta[name="csrfToken"]').attr('content')
                 },
@@ -73,4 +128,3 @@ function confirmDelete(id) {
         }
     });
 }
-

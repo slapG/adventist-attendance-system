@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="col-md-6 col-12">
                                 <div class="form-group">
-                                        <?= $this->Form->label(ucwords('last_name'))?>
+                                        <?= $this->Form->label(ucwords('department'))?>
                                         <?= $this->Form->select('department_id',$departments,[
                                             'class'=> 'form-control',
                                             'empty' => 'Select Department',
@@ -62,7 +62,12 @@
                                 <div class="col-md-6 col-12">
                                 <div class="form-group">
                                         <?= $this->Form->label(ucwords('status'))?>
-                                        <?= $this->Form->input('status',[
+                                        <?= $this->Form->select('status',[ 
+                                            'Single' => 'Single', 
+                                            'Married' => 'Married', 
+                                            'Divorced' => 'Divorced', 
+                                            'Widowed' => 'Widowed'],[
+                                            'empty' => 'Select Status',
                                             'class'=> 'form-control',
                                             'placeholder' => ' Enter Status',
                                             ])?>

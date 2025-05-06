@@ -11,6 +11,11 @@ namespace App\Controller;
  */
 class DepartmentsController extends AppController
 {
+    public function beforeFilter(\Cake\Event\EventInterface $event)
+    {
+        parent::beforeFilter($event);
+        $this->viewBuilder()->setLayout('mazer');
+    }
     /**
      * Index method
      *
